@@ -1,0 +1,45 @@
+services:
+  bigdata_postgres:
+    image: postgres:16
+    container_name: bigdata_postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: 12345
+      POSTGRES_DB: db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  transform:
+    build:
+      context: .
+      dockerfile: Dockerfile.transform
+    container_name: bigdata_transform
+    depends_on:
+      bigdata_postgres:
+        condition: service_healthy
+    environment:
+      DB_HOST: bigdata_postgres
+      DB_PORT: 5432
+      DB_NAME: db
+      DB_USER: admin
+      DB_PASSWORD: 12345
+    volumes:
+      - ./data:/data
+      - ./sql:/sql
+    networks:
+      - app-network
+
+volumes:
+  postgres_data:
+
+networks:
+  app-network:
