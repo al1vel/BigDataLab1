@@ -50,6 +50,16 @@ def main():
     conn.commit()
     print(f"Loaded {rows_count} rows from {loaded_files} CSV files")
 
+    execute_sql_file(cursor, "/sql/create_snowflake_schema.sql")
+    conn.commit()
+    print("Snowflake schema created.")
+
+    execute_sql_file(cursor, "/sql/populate_snowflake_schema.sql")
+    cursor.execute("SELECT COUNT(*) FROM fact_sales")
+    fact_rows_count = cursor.fetchone()[0]
+    conn.commit()
+    print(f"Snowflake schema populated. fact_sales rows: {fact_rows_count}")
+
     cursor.close()
     conn.close()
 
